@@ -16,7 +16,8 @@ Public calendar of formal events for the Centre for Biodiversity Forecasting (CB
 ```
 index.html        the page
 cal.js, cal.css   shared helpers and styles (dates, calendar files, year strip)
-logo.svg          placeholder mark, to be replaced with the CBF logo
+logo.svg          CBF logo (from biodiversity-forecasting.github.io)
+favicon.png       CBF icon
 events.json       published events
 events.ics        the same events as an iCalendar file
 tools/build.mjs   builds events.json and events.ics from an export of the editor

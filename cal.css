@@ -1,21 +1,21 @@
 /* VOICE work: a research centre's formal calendar, kept by its coordinators
    IDEA the printed year planner on the centre office wall
    PICTURE a twelve-month strip with one lane per kind of event, today marked
-   COLOUR white ground, CBF deep green band (#14501c), pale CBF green (#d8f2cf), coral for deadlines
-   TYPE Manrope 800 for titles and dates, Manrope for text
+   COLOUR from the CBF website and logo: white ground, navy band (#1C3A5C), CBF blue and lime, moss, brick red for deadlines
+   TYPE Open Sans, as on the CBF website: 800 for titles and dates, 400–600 for text
    LAYOUT green title band; strip full width; list with hanging dates; phone stacks to one column */
 :root{color-scheme:light dark;
-  --bg:light-dark(#ffffff,#0c150e);--ink:light-dark(#13200f,#e4ede0);--muted:light-dark(#4f5c49,#a2b29b);
-  --line:light-dark(#d3e1cc,#27392a);--soft:light-dark(#f1f8ed,#132119);--pale:light-dark(#d8f2cf,#1d3522);
-  --surface:light-dark(#ffffff,#101c13);--band:light-dark(#14501c,#0f3515);
-  --prim:light-dark(#14501c,#93d67d);--primInk:light-dark(#ffffff,#0c150e);
-  --gov:light-dark(#14501c,#93d67d);--sci:light-dark(#1b6f64,#6ccfbd);--ddl:light-dark(#c0432a,#f28b6d);--ext:light-dark(#8a6100,#e2b553);
-  --accent:light-dark(#c0432a,#f28b6d)}
+  --bg:light-dark(#ffffff,#0f1c2b);--ink:light-dark(#1a1f24,#e6ecf2);--muted:light-dark(#4a5560,#a9b6c3);
+  --line:light-dark(#d9e1e9,#2a3d52);--soft:light-dark(#f1f5f9,#152638);--pale:light-dark(#e4f0c8,#2a3d16);
+  --surface:light-dark(#ffffff,#17293c);--band:light-dark(#1c3a5c,#0a1520);
+  --prim:light-dark(#2f5d8c,#9dc0e6);--primInk:light-dark(#ffffff,#0f1c2b);
+  --gov:light-dark(#2f5d8c,#9dc0e6);--sci:light-dark(#4f6b1a,#c9e28a);--ddl:light-dark(#a33a24,#f2a898);--ext:light-dark(#7a5a00,#f3d57a);
+  --accent:light-dark(#a33a24,#f2a898)}
 :root[data-theme=light]{color-scheme:light}
 :root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:16px/1.55 Manrope,system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:clip}
+body{background:var(--bg);color:var(--ink);font:16px/1.55 "Open Sans",system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:clip}
 img{max-width:100%}
 [hidden]{display:none!important}
 .band{padding-left:max(4vw,16px,env(safe-area-inset-left,0px));padding-right:max(4vw,16px,env(safe-area-inset-right,0px))}
@@ -29,12 +29,12 @@ h2{font-size:20px;line-height:1.2;font-weight:800;letter-spacing:-.01em;margin:0
 /* Title band */
 header.top{background:var(--band);color:#fff;padding-top:max(22px,env(safe-area-inset-top,0px));padding-bottom:26px}
 .top .wrap{display:flex;flex-wrap:wrap;gap:18px 32px;align-items:center;justify-content:space-between}
-.brand{display:flex;gap:16px;align-items:center}
-.brand img{width:56px;height:56px;flex:none}
+.brand .logo{display:inline-block;margin-bottom:16px}
+.brand .logo img{display:block;height:60px;width:auto}
 h1{font-size:clamp(30px,4vw,42px);line-height:1.05;letter-spacing:-.02em;margin:0;font-weight:800;text-wrap:balance}
-.top p{margin:6px 0 0;color:#d8f2cf;font-size:15px;max-width:60ch}
-.top .testnote{margin:16px 0 0;display:inline-block;background:#d8f2cf;color:#14501c;font-weight:700;font-size:14px;border-radius:6px;padding:4px 10px}
-.next{border:1px solid rgba(216,242,207,.4);border-radius:12px;padding:12px 16px;font-size:14px;color:#d8f2cf;max-width:440px}
+.top p{margin:6px 0 0;color:#c9d6e3;font-size:16px;max-width:60ch}
+.top .testnote{margin:16px 0 0;display:inline-block;background:#f1f6e0;color:#1c3a5c;font-weight:700;font-size:14px;border-radius:6px;padding:4px 10px}
+.next{border:1px solid rgba(201,214,227,.4);border-radius:10px;padding:12px 16px;font-size:14px;color:#c9d6e3;max-width:440px}
 .next b{display:block;color:#fff;font-size:17px;line-height:1.3}
 .next .when{white-space:nowrap}
 
@@ -43,7 +43,7 @@ h1{font-size:clamp(30px,4vw,42px);line-height:1.05;letter-spacing:-.02em;margin:
 .btn:hover{border-color:var(--muted)}
 .btn:disabled{opacity:.55;cursor:default}
 .btn.primary{background:var(--prim);border-color:var(--prim);color:var(--primInk)}
-.btn.onband{background:#d8f2cf;border-color:#d8f2cf;color:#14501c}
+.btn.onband{background:#bcd866;border-color:#bcd866;color:#1c3a5c}
 .btn.danger{color:var(--accent)}
 .btn.sm{min-height:36px;padding:5px 12px;font-size:14px}
 .filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -117,5 +117,5 @@ details.past .ev .when b{color:var(--muted)}
   .ev{grid-template-columns:72px minmax(0,1fr);padding-inline:4px}
   .ev .when b{font-size:30px}
   .ev .when b.rng{font-size:20px}
-  .brand img{width:46px;height:46px}
+  .brand .logo img{height:48px}
 }
