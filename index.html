@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CBF events</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="cal.css">
+<style>
+/* GitHub Pages version: calendar buttons, subscription box, test notice and footer. Look and plan are in cal.css. */
+.topacts{display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+.list{padding-bottom:40px}
+.evacts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.evacts .btn{min-height:40px;padding:6px 13px;font-size:14px}
+.sub{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px 40px;align-items:start;background:var(--soft);border-radius:12px;padding:22px clamp(16px,3vw,28px);margin-bottom:40px}
+.sub p{margin:6px 0 0;font-size:15px}
+.sub ul{margin:8px 0 0;padding-left:20px;font-size:15px}
+.subrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.subrow input{font:inherit;font-size:15px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 11px;min-height:44px;width:100%}
+.sub .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.sub a{color:var(--prim);font-weight:700}
+footer{border-top:1px solid var(--line);padding-block:22px 34px;color:var(--muted);font-size:14px}
+footer a{color:inherit}
+@media (max-width:760px){.sub{grid-template-columns:minmax(0,1fr)}}
+footer p{margin:0 0 4px}
+@media (max-width:600px){.topacts{width:100%}.topacts .btn{width:100%}}
+</style>
+</head>
+<body>
+<header class="top band">
+  <div class="wrap">
+    <div>
+      <div class="brand">
+        <img src="logo.svg" alt="CBF">
+        <div>
+          <h1>CBF events</h1>
+          <p>Board and annual meetings, seminars and reporting deadlines for the Centre for Biodiversity Forecasting.</p>
+        </div>
+      </div>
+      <p class="testnote" id="note" hidden></p>
+    </div>
+    <div class="topacts">
+      <div class="next" id="next">Loading…</div>
+      <a class="btn onband" id="allIcs" href="events.ics" download="cbf-events.ics">Add all to your calendar (.ics)</a>
+      <a class="btn onband" href="#subscribe">Subscribe for updates</a>
+    </div>
+  </div>
+</header>
+
+<section class="band sec" aria-labelledby="h-strip">
+  <div class="wrap">
+    <div class="sechead">
+      <h2 id="h-strip">The next twelve months</h2>
+      <div class="legend">
+        <span><i class="lg"></i>Confirmed</span>
+        <span><i class="lg tent"></i>Tentative</span>
+        <span><i class="lg ddl"></i>Deadline</span>
+        <span><i class="lg now"></i>Today</span>
+      </div>
+    </div>
+    <div class="strip"><div class="sgrid" id="strip"></div></div>
+  </div>
+</section>
+
+<main class="band sec list">
+  <div class="wrap">
+    <div class="listhead">
+      <div class="filters" id="filters" role="group" aria-label="Filter by category"></div>
+    </div>
+    <div id="list"><p class="status">Loading events…</p></div>
+  </div>
+</main>
+
+<section class="band" id="subscribe" aria-labelledby="h-sub">
+  <div class="wrap sub">
+    <div>
+      <h2 id="h-sub">Keep CBF events in your own calendar</h2>
+      <p>Subscribe once and new or changed events appear by themselves. Calendar apps check for updates every few hours, so changes can take up to a day to show.</p>
+      <ul>
+        <li>Outlook: Add calendar → Subscribe from web, and paste the link.</li>
+        <li>Google Calendar: Other calendars → From URL, and paste the link.</li>
+        <li>Apple Calendar or Outlook on the desktop: use the subscribe link.</li>
+      </ul>
+    </div>
+    <div>
+      <label class="sr" for="subUrl">Subscription link</label>
+      <div class="subrow"><input id="subUrl" readonly value="https://biodiversity-forecasting.github.io/CBF-events/events.ics"><button class="btn" type="button" id="copySub">Copy link</button></div>
+      <div class="acts"><a id="webcal" href="webcal://biodiversity-forecasting.github.io/CBF-events/events.ics">Subscribe in Apple Calendar or Outlook desktop</a></div>
+    </div>
+  </div>
+</section>
+
+<footer class="band">
+  <div class="wrap">
+    <p><a href="https://biodiversity-forecasting.github.io/">Centre for Biodiversity Forecasting (CBF)</a>, hosted by NTNU and funded by the Research Council of Norway.</p>
+    <p>All times are Norwegian time (CET/CEST). <span id="updated"></span></p>
+  </div>
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="cal.js"></script>
+<script>
+{
+const C = window.CAL;
+const $ = s => document.querySelector(s);
+let events = [], filter = "all", downloads = null;
+const reduce = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function toast(m){ const t = $("#toast"); t.textContent = m; t.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("on"), 3200); }
+function setStatus(m){ const box = $("#list"); box.innerHTML = ""; const p = document.createElement("p"); p.className = "status"; p.textContent = m; box.appendChild(p); }
+const upcoming = () => events.filter(e => C.endOf(e) >= C.TODAY).sort(C.byStart);
+
+/* On GitHub Pages files download directly; inside Claude they need the downloads capability. */
+const inClaude = !!(window.claude && window.claude.use);
+try {
+  const u = new URL("events.ics", location.href);
+  if (u.protocol === "https:"){ $("#subUrl").value = u.href; $("#webcal").href = "webcal://" + u.host + u.pathname; }
+} catch (e) {}
+$("#copySub").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText($("#subUrl").value); toast("Link copied"); }
+  catch (e){ $("#subUrl").select(); toast("Select the link and copy it"); }
+});
+async function save(filename, data){
+  if (!inClaude){
+    const url = URL.createObjectURL(new Blob([data], {type:"text/calendar"}));
+    const a = document.createElement("a"); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    return;
+  }
+  try { await downloads.save({filename, data}); toast("Calendar file saved"); }
+  catch (e){ toast(e && e.code === "declined" ? "Download cancelled" : "Download failed"); }
+}
+$("#allIcs").addEventListener("click", ev => { if (inClaude && downloads && events.length){ ev.preventDefault(); save("cbf-events.ics", C.ics(upcoming(), "CBF events")); } });
+
+function renderNext(){
+  const n = upcoming()[0], box = $("#next");
+  box.textContent = "";
+  if (!n){ box.textContent = "No upcoming events."; return; }
+  box.append("Next");
+  const b = document.createElement("b"); b.textContent = n.title;
+  const s = document.createElement("span"); s.className = "when";
+  s.textContent = C.dateLabel(n) + (n.startTime ? " · " + C.timeLabel(n) : "") + " · " + C.relDays(n);
+  box.append(b, s);
+}
+function renderFilters(){
+  const up = upcoming();
+  const items = [{id:"all", label:"All", n:up.length}].concat(C.CATS.map(c => ({id:c.id, label:c.label, n:up.filter(e => e.category === c.id).length, c:C.color(c.id)})).filter(i => i.n));
+  const box = $("#filters");
+  box.innerHTML = items.map(i => `<button type="button" class="fchip" data-f="${i.id}" aria-pressed="${filter === i.id}">${i.c ? `<i class="dot" style="--c:${i.c}"></i>` : ""}${C.esc(i.label)}<span class="n">${i.n}</span></button>`).join("");
+  box.querySelectorAll(".fchip").forEach(b => b.addEventListener("click", () => { filter = b.dataset.f; render(); }));
+}
+function renderStrip(){
+  const nx = upcoming()[0];
+  const used = C.CATS.filter(c => events.some(e => e.category === c.id)).map(c => c.id);
+  C.strip($("#strip"), events, {nextId: nx && nx.id, cats: used.length ? used : null, onPick: id => {
+    const e = events.find(x => x.id === id); if (!e) return;
+    if (filter !== "all" && filter !== e.category){ filter = "all"; render(); }
+    const r = document.getElementById("ev-" + id); if (!r) return;
+    const past = r.closest("details"); if (past) past.open = true;
+    r.scrollIntoView({block:"center", behavior: reduce() ? "auto" : "smooth"});
+    r.classList.add("flash"); setTimeout(() => r.classList.remove("flash"), 1400);
+  }});
+}
+function evRow(e, isPast){
+  const el = document.createElement("article");
+  el.className = "ev"; el.id = "ev-" + e.id;
+  el.style.setProperty("--c", C.color(e.category));
+  const w = C.whenBlock(e);
+  el.innerHTML = `<div class="when"><b${w.range ? ' class="rng"' : ""}></b><span></span></div><div class="what"><h3></h3><p class="meta"></p></div>`;
+  el.querySelector(".when b").textContent = w.big;
+  el.querySelector(".when span").textContent = w.small;
+  el.querySelector("h3").textContent = e.title;
+  const meta = el.querySelector(".meta");
+  [C.isMulti(e) ? C.dateLabel(e) : "", C.timeLabel(e), e.location, e.participants].filter(Boolean).forEach(t => {
+    const s = document.createElement("span"); s.textContent = t; if (t.length > 22) s.className = "long"; meta.appendChild(s);
+  });
+  if (!meta.children.length) meta.remove();
+  const what = el.querySelector(".what");
+  if (e.description){ const p = document.createElement("p"); p.className = "desc"; p.textContent = e.description; what.appendChild(p); }
+  const foot = document.createElement("div"); foot.className = "foot";
+  foot.innerHTML = '<span class="chip"><i class="dot"></i></span>';
+  foot.querySelector(".chip").append((C.CAT[e.category] || C.CATS[0]).label);
+  if (e.status === "tentative"){ const p = document.createElement("span"); p.className = "pill"; p.textContent = "Tentative"; foot.appendChild(p); }
+  const link = C.safeUrl(e.onlineLink);
+  if (link){ const a = document.createElement("a"); a.href = link; a.target = "_blank"; a.rel = "noopener"; a.textContent = "Join online"; a.style.color = "var(--prim)"; a.style.fontWeight = "700"; foot.appendChild(a); }
+  what.appendChild(foot);
+  if (!isPast){
+    const acts = document.createElement("div"); acts.className = "evacts";
+    const mk = (label, href) => { const a = document.createElement("a"); a.className = "btn"; a.href = href; a.target = "_blank"; a.rel = "noopener"; a.textContent = label; return a; };
+    acts.append(mk("Add to Outlook", C.outlookUrl(e)), mk("Add to Google Calendar", C.googleUrl(e)));
+    if (downloads || !inClaude){
+      const b = document.createElement("button"); b.type = "button"; b.className = "btn"; b.textContent = "Download .ics";
+      b.addEventListener("click", () => save("cbf-" + e.id + ".ics", C.ics([e], "CBF events")));
+      acts.appendChild(b);
+    }
+    what.appendChild(acts);
+  }
+  return el;
+}
+function renderList(){
+  const box = $("#list"); box.innerHTML = "";
+  const vis = events.filter(e => filter === "all" || e.category === filter);
+  const up = vis.filter(e => C.endOf(e) >= C.TODAY).sort(C.byStart);
+  const past = vis.filter(e => C.endOf(e) < C.TODAY).sort(C.byStart).reverse();
+  if (!up.length){ const p = document.createElement("p"); p.className = "status"; p.textContent = "No upcoming events in this category."; box.appendChild(p); }
+  let mk = "";
+  up.forEach(e => {
+    const k = e.start.slice(0, 7);
+    if (k !== mk){ mk = k; const h = document.createElement("h3"); h.className = "mhead"; h.textContent = C.fMonth.format(C.parse(e.start)); box.appendChild(h); }
+    box.appendChild(evRow(e, false));
+  });
+  if (past.length){
+    const d = document.createElement("details"); d.className = "past";
+    const s = document.createElement("summary"); s.textContent = "Past events (" + past.length + ")";
+    d.appendChild(s); past.forEach(e => d.appendChild(evRow(e, true))); box.appendChild(d);
+  }
+}
+function render(){ renderNext(); renderFilters(); renderStrip(); renderList(); }
+
+fetch("events.json", {cache:"no-store"}).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(data => {
+  events = (Array.isArray(data.events) ? data.events : []).filter(e => e && e.title && /^\d{4}-\d{2}-\d{2}$/.test(e.start || "") && e.status !== "draft");
+  if (data.note){ $("#note").textContent = data.note; $("#note").hidden = false; }
+  if (data.updated){ $("#updated").textContent = "Updated " + C.fDay.format(C.parse(data.updated)) + "."; }
+  render();
+}).catch(() => { setStatus("The events could not be loaded. Try reloading the page."); $("#next").textContent = ""; });
+
+if (inClaude){
+  window.claude.use("downloads").then(d => { downloads = d; if (d && events.length) renderList(); }).catch(() => {});
+}
+}
+</script>
+</body>
+</html>

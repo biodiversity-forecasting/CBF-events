@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="CBF (placeholder mark)">
+  <!-- Placeholder mark: replace this file with the official CBF logo. -->
+  <circle cx="32" cy="32" r="29" fill="none" stroke="#d8f2cf" stroke-width="3"/>
+  <path d="M31 37 L51 21 L53 33 L50 46 Z" fill="#d8f2cf" opacity=".25"/>
+  <path d="M31 37 L51 21 M31 37 L53 33 M31 37 L50 46" fill="none" stroke="#d8f2cf" stroke-width="2.6" stroke-linecap="round"/>
+  <path d="M11 41 L18 37 L24 39 L31 37" fill="none" stroke="#ffffff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="31" cy="37" r="3.2" fill="#ffffff"/>
+</svg>
